@@ -37,6 +37,12 @@
       var GAS_URL = 'https://script.google.com/macros/s/AKfycbw7yp4h5KSpMIuK07KMb7HZIFcNhm50ttZ2PCBtjh1f-az6F_e8NgwF2qpwCb5SDj2t/exec';
 
       document.getElementById('form-frame').src = GAS_URL;
+
+      // スマホの戻るボタン対策：履歴を上書きしてページが閉じるのを防ぐ
+      history.pushState(null, '', location.href);
+      window.addEventListener('popstate', function () {
+        history.pushState(null, '', location.href);
+      });
     </script>
   </body>
 </html>
