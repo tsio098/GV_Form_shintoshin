@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>入塾登録フォーム | グレイトヴォヤージュ</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      iframe {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      id="form-frame"
+      src="about:blank"
+      allowfullscreen
+    ></iframe>
+
+    <script>
+      // ★ここを入塾登録フォームのデプロイURLに変更してください
+      var GAS_URL = 'https://script.google.com/macros/s/AKfycbw7yp4h5KSpMIuK07KMb7HZIFcNhm50ttZ2PCBtjh1f-az6F_e8NgwF2qpwCb5SDj2t/exec';
+
+      document.getElementById('form-frame').src = GAS_URL;
+    </script>
+  </body>
+</html>
