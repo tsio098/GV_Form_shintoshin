@@ -19,17 +19,12 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 16px;
       padding: 20px;
     }
-    .logo {
-      width: 180px;
-      height: auto;
-      margin-bottom: 12px;
-    }
+    .logo { width: 180px; height: auto; margin-bottom: 8px; }
     .spinner {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       border: 4px solid #e4e9ee;
       border-top-color: #002045;
       border-radius: 50%;
@@ -55,26 +50,22 @@
       line-height: 1.6;
     }
     .error-box.show { display: block; }
-    /* デバッグパネル */
+    /* ─── デバッグログ: 常時表示 ─── */
     #debug {
-      display: none;
-      position: fixed;
-      bottom: 8px;
-      left: 8px;
-      right: 8px;
-      max-height: 200px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 220px;
       overflow-y: auto;
       background: rgba(0,0,0,0.85);
       color: #0f0;
       font-family: monospace;
       font-size: 11px;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
-      z-index: 9999;
       white-space: pre-wrap;
       word-break: break-all;
+      margin-top: 12px;
     }
-    #debug.show { display: block; }
   </style>
 </head>
 <body>
@@ -86,78 +77,92 @@
   <div class="spinner" id="spinner"></div>
   <p class="status" id="status">認証中...</p>
 
-  <div class="error-box" id="error-box">
-    読み込みに失敗しました。<br/>
-    LINEアプリからもう一度開き直してください。
-  </div>
+  <div class="error-box" id="error-box"></div>
 
-  <div id="debug"></div>
+  <!-- デバッグログ（常時表示 — 動作確認後に削除可） -->
+  <div id="debug">ログ初期化中...</div>
 
   <script>
     // ============================================================
-    //  ★ 設定（デプロイURLが変わった場合はここだけ変更）
+    //  ★ 設定
     // ============================================================
-    const LIFF_ID  = '2009771008-1FTbZYBs';
+    var LIFF_ID  = '2009771008-1FTbZYBs';
 
-    // ★★ ここにGASのデプロイURLを貼り付けてください ★★
-    // 例: 'https://script.google.com/macros/s/AKfycbXXXXXXXX/exec'
-    const GAS_URL  = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
+    // ★★ GASの最新デプロイURLに書き換えてください ★★
+    var GAS_URL  = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
 
     // ============================================================
-    //  デバッグ（ロゴを5回タップで表示）
+    //  デバッグ
     // ============================================================
-    var _tapCount = 0, _tapTimer = null, _logs = [];
+    var _logs = [];
     function dbg(msg) {
       var ts = new Date().toLocaleTimeString('ja-JP');
-      _logs.push('[' + ts + '] ' + msg);
+      var line = '[' + ts + '] ' + msg;
+      _logs.push(line);
       console.log('[GHP-LIFF]', msg);
-      document.getElementById('debug').textContent = _logs.join('\n');
+      var el = document.getElementById('debug');
+      if (el) el.textContent = _logs.join('\n');
     }
-    document.querySelector('.logo').addEventListener('click', function() {
-      _tapCount++;
-      clearTimeout(_tapTimer);
-      _tapTimer = setTimeout(function() { _tapCount = 0; }, 2000);
-      if (_tapCount >= 5) {
-        document.getElementById('debug').classList.toggle('show');
-        _tapCount = 0;
-      }
-    });
 
     function setStatus(msg) {
       document.getElementById('status').textContent = msg;
     }
 
-    function showError() {
+    function showError(msg) {
       document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').style.display  = 'none';
-      document.getElementById('error-box').classList.add('show');
+      var errBox = document.getElementById('error-box');
+      errBox.innerHTML = msg || '読み込みに失敗しました。<br/>LINEアプリからもう一度開き直してください。';
+      errBox.classList.add('show');
     }
 
     // ============================================================
     //  userId 取得後にGASへリダイレクト
     // ============================================================
     function redirectToGAS(userId) {
-      dbg('Redirecting to GAS with uid=' + userId);
+      if (!userId) {
+        dbg('ERROR: userId is empty, cannot redirect');
+        showError('ユーザーIDを取得できませんでした。<br/>LINEアプリを再起動して試してください。');
+        return;
+      }
+      var url = GAS_URL + '?uid=' + encodeURIComponent(userId);
+      dbg('Redirecting to: ' + url);
       setStatus('フォームへ移動中...');
-      // uid を持ってGASへ。GAS側でcheckUserId()を呼び、新規/既存を判定する
-      location.href = GAS_URL + '?uid=' + encodeURIComponent(userId);
+
+      // 3秒後にリダイレクト（デバッグログを見る時間を確保）
+      // ★ 動作確認が終わったら setTimeout を外して即リダイレクトにできます
+      setTimeout(function() {
+        location.href = url;
+      }, 3000);
     }
 
     // ============================================================
-    //  LIFF 初期化 & userId 取得（3段フォールバック）
+    //  LIFF 初期化 & userId 取得
     // ============================================================
-    dbg('Starting LIFF init, LIFF_ID=' + LIFF_ID);
+    dbg('=== GitHub Pages LIFF Auth ===');
+    dbg('LIFF_ID = ' + LIFF_ID);
+    dbg('GAS_URL = ' + GAS_URL);
+    dbg('location = ' + location.href);
+    dbg('userAgent = ' + navigator.userAgent.substring(0, 80));
     setStatus('LINEアカウントを確認中...');
+
+    // 全体タイムアウト: 15秒後もまだ滞在していたらエラー表示
+    var _globalTimeout = setTimeout(function() {
+      dbg('GLOBAL TIMEOUT 15s');
+      showError('認証がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
+    }, 15000);
 
     liff.init({ liffId: LIFF_ID })
       .then(function() {
-        dbg('liff.init() SUCCESS');
-        dbg('isLoggedIn=' + liff.isLoggedIn());
-        dbg('isInClient=' + liff.isInClient());
-        dbg('OS=' + liff.getOS());
+        dbg('--- liff.init() SUCCESS ---');
+        dbg('isLoggedIn = ' + liff.isLoggedIn());
+        dbg('isInClient = ' + liff.isInClient());
+        try { dbg('OS = ' + liff.getOS()); } catch(e) {}
+        try { dbg('language = ' + liff.getLanguage()); } catch(e) {}
+        try { dbg('version = ' + liff.getVersion()); } catch(e) {}
 
+        // ── ログインチェック ──
         if (!liff.isLoggedIn()) {
-          dbg('Not logged in → liff.login()');
+          dbg('Not logged in → calling liff.login()');
           setStatus('LINEログインへ移動...');
           liff.login();
           return;
@@ -165,58 +170,81 @@
 
         setStatus('ユーザー情報を取得中...');
 
-        // 方法1: getContext()
+        // ── 方法1: getContext() ──
         try {
           var ctx = liff.getContext();
-          dbg('getContext()=' + JSON.stringify(ctx));
+          dbg('getContext() = ' + JSON.stringify(ctx));
           if (ctx && ctx.userId) {
-            dbg('★ userId from getContext');
+            dbg('★ userId from getContext: ' + ctx.userId);
+            clearTimeout(_globalTimeout);
             redirectToGAS(ctx.userId);
             return;
+          } else {
+            dbg('getContext() returned no userId');
           }
-        } catch(e) { dbg('getContext() error: ' + e.message); }
+        } catch(e) {
+          dbg('getContext() error: ' + e.message);
+        }
 
-        // 方法2: getDecodedIDToken()
+        // ── 方法2: getDecodedIDToken() ──
         try {
           var tok = liff.getDecodedIDToken();
-          dbg('getDecodedIDToken()=' + JSON.stringify(tok));
+          dbg('getDecodedIDToken() = ' + JSON.stringify(tok));
           if (tok && tok.sub) {
-            dbg('★ userId from IDToken.sub');
+            dbg('★ userId from IDToken.sub: ' + tok.sub);
+            clearTimeout(_globalTimeout);
             redirectToGAS(tok.sub);
             return;
+          } else {
+            dbg('getDecodedIDToken() returned no sub');
           }
-        } catch(e) { dbg('getDecodedIDToken() error: ' + e.message); }
+        } catch(e) {
+          dbg('getDecodedIDToken() error: ' + e.message);
+        }
 
-        // 方法3: getProfile()（5秒タイムアウト付き）
-        dbg('Trying getProfile()...');
-        var done = false;
-        var timer = setTimeout(function() {
-          if (!done) {
-            done = true;
-            dbg('getProfile() TIMEOUT → showError');
-            showError();
+        // ── 方法3: getProfile()（8秒タイムアウト） ──
+        dbg('Trying getProfile() with 8s timeout...');
+        var profileDone = false;
+        var profileTimer = setTimeout(function() {
+          if (!profileDone) {
+            profileDone = true;
+            dbg('getProfile() TIMEOUT (8s)');
+            clearTimeout(_globalTimeout);
+            showError('ユーザー情報の取得がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
           }
-        }, 5000);
+        }, 8000);
 
         liff.getProfile()
           .then(function(p) {
-            if (done) return;
-            done = true;
-            clearTimeout(timer);
-            dbg('getProfile() SUCCESS, userId=' + p.userId);
-            redirectToGAS(p.userId);
+            if (profileDone) return;
+            profileDone = true;
+            clearTimeout(profileTimer);
+            clearTimeout(_globalTimeout);
+            dbg('getProfile() SUCCESS = ' + JSON.stringify(p));
+            if (p && p.userId) {
+              dbg('★ userId from getProfile: ' + p.userId);
+              redirectToGAS(p.userId);
+            } else {
+              dbg('getProfile() returned no userId');
+              showError('プロフィール情報にユーザーIDが含まれていません。');
+            }
           })
           .catch(function(e) {
-            if (done) return;
-            done = true;
-            clearTimeout(timer);
+            if (profileDone) return;
+            profileDone = true;
+            clearTimeout(profileTimer);
+            clearTimeout(_globalTimeout);
             dbg('getProfile() ERROR: ' + e.message);
-            showError();
+            showError('プロフィール取得エラー: ' + e.message);
           });
       })
       .catch(function(err) {
-        dbg('liff.init() FAILED: ' + err.message);
-        showError();
+        clearTimeout(_globalTimeout);
+        dbg('--- liff.init() FAILED ---');
+        dbg('error: ' + err.message);
+        dbg('error name: ' + err.name);
+        dbg('error stack: ' + (err.stack || 'N/A').substring(0, 200));
+        showError('LIFF初期化エラー: ' + err.message + '<br/>LINEアプリから開いているか確認してください。');
       });
   </script>
 
