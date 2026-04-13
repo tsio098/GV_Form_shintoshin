@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>グレイトヴォヤージュ — 読み込み中</title>
+  <title>グレイトヴォヤージュ</title>
 
   <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -50,64 +50,60 @@
       line-height: 1.6;
     }
     .error-box.show { display: block; }
-    /* ─── デバッグログ: 常時表示 ─── */
-    #debug {
-      width: 100%;
-      max-width: 400px;
-      max-height: 220px;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.85);
-      color: #0f0;
-      font-family: monospace;
-      font-size: 11px;
-      padding: 10px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin-top: 12px;
+
+    /* ─── GAS iframe（認証後に表示） ─── */
+    #gas-frame {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+      z-index: 100;
+    }
+    #gas-frame.active { display: block; }
+
+    /* ─── ローディング画面 ─── */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
     }
   </style>
 </head>
 <body>
 
-  <img class="logo"
-       src="https://lh3.googleusercontent.com/d/1gsyaqDZvfGt-dRsoaCoTIUxa8GGIoEZU"
-       alt="グレイトヴォヤージュ"/>
+  <!-- 認証中画面 -->
+  <div id="auth-screen">
+    <img class="logo"
+         src="https://lh3.googleusercontent.com/d/1gsyaqDZvfGt-dRsoaCoTIUxa8GGIoEZU"
+         alt="グレイトヴォヤージュ"/>
+    <div class="spinner" id="spinner"></div>
+    <p class="status" id="status">認証中...</p>
+    <div class="error-box" id="error-box"></div>
+  </div>
 
-  <div class="spinner" id="spinner"></div>
-  <p class="status" id="status">認証中...</p>
-
-  <div class="error-box" id="error-box"></div>
-
-  <!-- デバッグログ（常時表示 — 動作確認後に削除可） -->
-  <div id="debug">ログ初期化中...</div>
+  <!-- GASフォーム表示用 iframe -->
+  <iframe id="gas-frame"></iframe>
 
   <script>
     // ============================================================
-    //  ★ 設定
+    //  設定
     // ============================================================
     var LIFF_ID  = '2009771008-1FTbZYBs';
 
     // ★★ GASの最新デプロイURLに書き換えてください ★★
     var GAS_URL  = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
 
-    // ============================================================
-    //  デバッグ
-    // ============================================================
-    var _logs = [];
-    function dbg(msg) {
-      var ts = new Date().toLocaleTimeString('ja-JP');
-      var line = '[' + ts + '] ' + msg;
-      _logs.push(line);
-      console.log('[GHP-LIFF]', msg);
-      var el = document.getElementById('debug');
-      if (el) el.textContent = _logs.join('\n');
-    }
+    var _userId = '';
 
+    // ============================================================
+    //  UI ヘルパー
+    // ============================================================
     function setStatus(msg) {
       document.getElementById('status').textContent = msg;
     }
-
     function showError(msg) {
       document.getElementById('spinner').style.display = 'none';
       var errBox = document.getElementById('error-box');
@@ -116,53 +112,51 @@
     }
 
     // ============================================================
-    //  userId 取得後にGASへリダイレクト
+    //  GAS を iframe で読み込む（リダイレクトしない）
+    //  → LINE の「外部サイト」警告バナーが出ない
     // ============================================================
-    function redirectToGAS(userId) {
+    function loadGAS(userId) {
       if (!userId) {
-        dbg('ERROR: userId is empty, cannot redirect');
         showError('ユーザーIDを取得できませんでした。<br/>LINEアプリを再起動して試してください。');
         return;
       }
+      _userId = userId;
       var url = GAS_URL + '?uid=' + encodeURIComponent(userId);
-      dbg('Redirecting to: ' + url);
-      setStatus('フォームへ移動中...');
+      setStatus('フォームを読み込み中...');
 
-      // 3秒後にリダイレクト（デバッグログを見る時間を確保）
-      // ★ 動作確認が終わったら setTimeout を外して即リダイレクトにできます
-      setTimeout(function() {
-        location.href = url;
-      }, 3000);
+      var frame = document.getElementById('gas-frame');
+      frame.src = url;
+      frame.onload = function() {
+        // iframe 読み込み完了 → 認証画面を隠して iframe を全画面表示
+        document.getElementById('auth-screen').style.display = 'none';
+        frame.classList.add('active');
+      };
     }
+
+    // ============================================================
+    //  GAS iframe からの postMessage を受け取る
+    //  → フォーム送信後のページ遷移に使用
+    // ============================================================
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+
+      if (e.data.action === 'navigateToSeminar' && _userId) {
+        // 登録完了 → ゼミ選択ページを iframe に読み込む
+        var url = GAS_URL + '?page=seminar&uid=' + encodeURIComponent(_userId);
+        document.getElementById('gas-frame').src = url;
+      }
+    });
 
     // ============================================================
     //  LIFF 初期化 & userId 取得
     // ============================================================
-    dbg('=== GitHub Pages LIFF Auth ===');
-    dbg('LIFF_ID = ' + LIFF_ID);
-    dbg('GAS_URL = ' + GAS_URL);
-    dbg('location = ' + location.href);
-    dbg('userAgent = ' + navigator.userAgent.substring(0, 80));
-    setStatus('LINEアカウントを確認中...');
-
-    // 全体タイムアウト: 15秒後もまだ滞在していたらエラー表示
     var _globalTimeout = setTimeout(function() {
-      dbg('GLOBAL TIMEOUT 15s');
       showError('認証がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
     }, 15000);
 
     liff.init({ liffId: LIFF_ID })
       .then(function() {
-        dbg('--- liff.init() SUCCESS ---');
-        dbg('isLoggedIn = ' + liff.isLoggedIn());
-        dbg('isInClient = ' + liff.isInClient());
-        try { dbg('OS = ' + liff.getOS()); } catch(e) {}
-        try { dbg('language = ' + liff.getLanguage()); } catch(e) {}
-        try { dbg('version = ' + liff.getVersion()); } catch(e) {}
-
-        // ── ログインチェック ──
         if (!liff.isLoggedIn()) {
-          dbg('Not logged in → calling liff.login()');
           setStatus('LINEログインへ移動...');
           liff.login();
           return;
@@ -170,45 +164,31 @@
 
         setStatus('ユーザー情報を取得中...');
 
-        // ── 方法1: getContext() ──
+        // 方法1: getContext()
         try {
           var ctx = liff.getContext();
-          dbg('getContext() = ' + JSON.stringify(ctx));
           if (ctx && ctx.userId) {
-            dbg('★ userId from getContext: ' + ctx.userId);
             clearTimeout(_globalTimeout);
-            redirectToGAS(ctx.userId);
+            loadGAS(ctx.userId);
             return;
-          } else {
-            dbg('getContext() returned no userId');
           }
-        } catch(e) {
-          dbg('getContext() error: ' + e.message);
-        }
+        } catch(e) {}
 
-        // ── 方法2: getDecodedIDToken() ──
+        // 方法2: getDecodedIDToken()
         try {
           var tok = liff.getDecodedIDToken();
-          dbg('getDecodedIDToken() = ' + JSON.stringify(tok));
           if (tok && tok.sub) {
-            dbg('★ userId from IDToken.sub: ' + tok.sub);
             clearTimeout(_globalTimeout);
-            redirectToGAS(tok.sub);
+            loadGAS(tok.sub);
             return;
-          } else {
-            dbg('getDecodedIDToken() returned no sub');
           }
-        } catch(e) {
-          dbg('getDecodedIDToken() error: ' + e.message);
-        }
+        } catch(e) {}
 
-        // ── 方法3: getProfile()（8秒タイムアウト） ──
-        dbg('Trying getProfile() with 8s timeout...');
+        // 方法3: getProfile()（8秒タイムアウト）
         var profileDone = false;
         var profileTimer = setTimeout(function() {
           if (!profileDone) {
             profileDone = true;
-            dbg('getProfile() TIMEOUT (8s)');
             clearTimeout(_globalTimeout);
             showError('ユーザー情報の取得がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
           }
@@ -220,12 +200,9 @@
             profileDone = true;
             clearTimeout(profileTimer);
             clearTimeout(_globalTimeout);
-            dbg('getProfile() SUCCESS = ' + JSON.stringify(p));
             if (p && p.userId) {
-              dbg('★ userId from getProfile: ' + p.userId);
-              redirectToGAS(p.userId);
+              loadGAS(p.userId);
             } else {
-              dbg('getProfile() returned no userId');
               showError('プロフィール情報にユーザーIDが含まれていません。');
             }
           })
@@ -234,16 +211,11 @@
             profileDone = true;
             clearTimeout(profileTimer);
             clearTimeout(_globalTimeout);
-            dbg('getProfile() ERROR: ' + e.message);
             showError('プロフィール取得エラー: ' + e.message);
           });
       })
       .catch(function(err) {
         clearTimeout(_globalTimeout);
-        dbg('--- liff.init() FAILED ---');
-        dbg('error: ' + err.message);
-        dbg('error name: ' + err.name);
-        dbg('error stack: ' + (err.stack || 'N/A').substring(0, 200));
         showError('LIFF初期化エラー: ' + err.message + '<br/>LINEアプリから開いているか確認してください。');
       });
   </script>
