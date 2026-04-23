@@ -230,10 +230,9 @@
     var LIFF_ID = '2009771008-1FTbZYBs';
 
     // ★★ GASの最新デプロイURLに書き換えてください ★★
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-a0vu6R0t/exec';
 
-    var _userId          = '';
-    var _friendCheckTimer = null;
+    var _userId = '';
 
     // ============================================================
     //  UI ヘルパー
@@ -284,44 +283,25 @@
       e.preventDefault();
       window.open('https://line.me/R/ti/p/@263cwwdl', '_blank');
       document.getElementById('checking-wrap').classList.add('show');
-      // 10秒後に手動ボタンを表示（自動検知が動かない場合のフォールバック）
-      setTimeout(function() {
-        document.getElementById('btn-manual-proceed').classList.add('show');
-      }, 10000);
-      _friendCheckTimer = setInterval(pollFriendship, 2000);
+      // 手動ボタンをすぐ表示（確実なフォールバック）
+      document.getElementById('btn-manual-proceed').classList.add('show');
+      // ページに戻ってきたらリロード → LIFF再初期化で最新の友達状態を取得
       document.addEventListener('visibilitychange', onVisibilityChange);
     }
 
     function onManualProceed() {
-      stopPolling();
       loadGAS(_userId);
-    }
-
-    function pollFriendship() {
-      liff.getFriendship()
-        .then(function(result) {
-          if (result.friendFlag) {
-            stopPolling();
-            loadGAS(_userId);
-          }
-        })
-        .catch(function() {
-          stopPolling();
-          loadGAS(_userId);
-        });
     }
 
     function onVisibilityChange() {
       if (!document.hidden) {
-        pollFriendship();
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+        // 少し待ってからリロード（LINEサーバーの反映を待つ）
+        setTimeout(function() { location.reload(); }, 800);
       }
     }
 
     function stopPolling() {
-      if (_friendCheckTimer) {
-        clearInterval(_friendCheckTimer);
-        _friendCheckTimer = null;
-      }
       document.removeEventListener('visibilitychange', onVisibilityChange);
     }
 
