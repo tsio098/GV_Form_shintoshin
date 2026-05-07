@@ -205,6 +205,7 @@
       友達追加する
     </a>
 
+    <!-- 友達追加後の自動検知中インジケーター -->
     <div class="checking-wrap" id="checking-wrap">
       <div class="spinner-green"></div>
       <p class="checking-text">友達追加を確認中です。追加後、自動で進みます…</p>
@@ -278,13 +279,18 @@
 
     // ============================================================
     //  友達追加ボタンを押したとき
+    //  → LINE友達追加ページを開き、ポーリング＋visibility変化で検知
     // ============================================================
     function onAddFriendClick(e) {
       e.preventDefault();
       window.open('https://line.me/R/ti/p/@263cwwdl', '_blank');
+
+      // 確認中インジケーターを表示
       document.getElementById('checking-wrap').classList.add('show');
+
       // 手動ボタンをすぐ表示（確実なフォールバック）
       document.getElementById('btn-manual-proceed').classList.add('show');
+
       // ページに戻ってきたらリロード → LIFF再初期化で最新の友達状態を取得
       document.addEventListener('visibilitychange', onVisibilityChange);
     }
@@ -307,19 +313,26 @@
 
     // ============================================================
     //  友達状態をチェックして分岐
+    //  ・既に友達 → そのままフォームへ
+    //  ・未フォロー → 友達追加パネルを表示
+    //  ・getFriendship が使えない（Bot link feature 未設定）
+    //    → エラーを無視してフォームへ（フォールバック）
     // ============================================================
     function checkFriendshipAndLoad(userId) {
       _userId = userId; // ★ Fix: ここで必ずセットしておく（pollFriendship で使うため）
       liff.getFriendship()
         .then(function(result) {
           if (result.friendFlag) {
+            // 既に友達 → 直接フォームへ
             loadGAS(userId);
           } else {
+            // 未フォロー → 友達追加パネルを表示
             showFriendScreen();
           }
         })
         .catch(function() {
-          // Bot link feature 未設定などのエラー → フォールバックでそのまま進む
+          // Bot link feature が設定されていない場合など
+          // → フォールバックとして直接フォームへ
           loadGAS(userId);
         });
     }
