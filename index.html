@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GV — 体験授業お申し込み</title>
+  <title>グレイトヴォヤージュ</title>
 
   <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -97,7 +97,6 @@
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 8px 24px rgba(6,199,85,0.3);
     }
-
     .friend-title {
       font-size: 20px;
       font-weight: 800;
@@ -109,7 +108,6 @@
       color: #43474e;
       line-height: 1.7;
     }
-
     .btn-line-add {
       display: flex;
       align-items: center;
@@ -129,7 +127,6 @@
       transition: opacity 0.15s;
     }
     .btn-line-add:active { opacity: 0.8; }
-
     .checking-wrap {
       display: none;
       flex-direction: column;
@@ -141,7 +138,6 @@
       font-size: 13px;
       color: #43474e;
     }
-
     .notice-box {
       background: #f0f4fa;
       border-radius: 12px;
@@ -175,8 +171,8 @@
   <!-- 認証中画面 -->
   <div id="auth-screen">
     <img class="logo"
-         src="https://lh3.googleusercontent.com/d/1Ecr278PF9Qw_OfV5s3GjOPGpiiBIHPAH"
-         alt="GV"/>
+         src="https://lh3.googleusercontent.com/d/1gsyaqDZvfGt-dRsoaCoTIUxa8GGIoEZU"
+         alt="グレイトヴォヤージュ"/>
     <div class="spinner" id="spinner"></div>
     <p class="status" id="status">認証中...</p>
     <div class="error-box" id="error-box"></div>
@@ -185,11 +181,10 @@
   <!-- 友達追加パネル（未フォロー時のみ表示） -->
   <div id="friend-screen">
     <img class="logo"
-         src="https://lh3.googleusercontent.com/d/1Ecr278PF9Qw_OfV5s3GjOPGpiiBIHPAH"
-         alt="GV"/>
+         src="https://lh3.googleusercontent.com/d/1gsyaqDZvfGt-dRsoaCoTIUxa8GGIoEZU"
+         alt="グレイトヴォヤージュ"/>
 
     <div class="line-icon-wrap">
-      <!-- LINE ロゴ -->
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
         <path d="M34 17.2C34 11.115 27.732 6.2 20 6.2S6 11.115 6 17.2c0 5.418 4.808 9.956 11.3 10.813.44.095 1.04.29 1.19.667.136.342.089.878.044 1.225l-.192 1.155c-.059.342-.27 1.338 1.17.73 1.44-.61 7.768-4.574 10.6-7.83C31.966 21.674 34 19.58 34 17.2z" fill="white"/>
       </svg>
@@ -199,10 +194,10 @@
       <p class="friend-title">LINE公式アカウントを<br/>友達追加してください</p>
     </div>
     <p class="friend-desc">
-      体験授業の日程・持ち物・当日の連絡など<br/>重要なご案内をLINEでお届けします。<br/>まだ友達追加がお済みでない方は<br/>下のボタンから追加してください。
+      授業の日程・連絡事項などの重要なご案内を<br/>LINEでお届けします。<br/>まだ友達追加がお済みでない方は<br/>下のボタンから追加してください。
     </p>
 
-    <a id="btn-add-friend" href="https://line.me/R/ti/p/@518qcqye"
+    <a id="btn-add-friend" href="https://line.me/R/ti/p/@263cwwdl"
        class="btn-line-add" onclick="onAddFriendClick(event)">
       <svg viewBox="0 0 24 24" fill="white" width="22" height="22">
         <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.07 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
@@ -210,13 +205,18 @@
       友達追加する
     </a>
 
+    <div class="checking-wrap" id="checking-wrap">
+      <div class="spinner-green"></div>
+      <p class="checking-text">友達追加を確認中です。追加後、自動で進みます…</p>
+    </div>
+
     <button class="btn-manual-proceed" id="btn-manual-proceed" onclick="onManualProceed()">
       友達追加しました → フォームに進む
     </button>
 
     <div class="notice-box">
-      LINE公式アカウントを友達追加したら、<br/>
-      上の「フォームに進む」ボタンをタップしてください。
+      友達追加後、自動でフォームに進みます。<br/>
+      自動で進まない場合は上のボタンをタップしてください。
     </div>
   </div>
 
@@ -227,11 +227,9 @@
     // ============================================================
     //  設定
     // ============================================================
+    var LIFF_ID = '2009771008-1FTbZYBs';
 
-    // ★★ 体験生フォーム用 LIFF ID ★★
-    var LIFF_ID = '2009771008-B9WfpUBS';
-
-    // ★★ GASの最新デプロイURL ★★
+    // ★★ GASの最新デプロイURLに書き換えてください ★★
     var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
 
     var _userId = '';
@@ -258,7 +256,7 @@
         return;
       }
       _userId = userId;
-      var url = GAS_URL + '?page=trial&uid=' + encodeURIComponent(userId);
+      var url = GAS_URL + '?uid=' + encodeURIComponent(userId);
       setStatus('フォームを読み込み中...');
 
       var frame = document.getElementById('gas-frame');
@@ -283,31 +281,40 @@
     // ============================================================
     function onAddFriendClick(e) {
       e.preventDefault();
-      window.open('https://line.me/R/ti/p/@518qcqye', '_blank');
-      // 手動ボタンを表示（友達追加後、ユーザー自身がタップしてフォームへ進む）
+      window.open('https://line.me/R/ti/p/@263cwwdl', '_blank');
+      document.getElementById('checking-wrap').classList.add('show');
+      // 手動ボタンをすぐ表示（確実なフォールバック）
       document.getElementById('btn-manual-proceed').classList.add('show');
+      // ページに戻ってきたらリロード → LIFF再初期化で最新の友達状態を取得
+      document.addEventListener('visibilitychange', onVisibilityChange);
     }
 
     function onManualProceed() {
       loadGAS(_userId);
     }
 
+    function onVisibilityChange() {
+      if (!document.hidden) {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+        // 少し待ってからリロード（LINEサーバーの反映を待つ）
+        setTimeout(function() { location.reload(); }, 800);
+      }
+    }
+
+    function stopPolling() {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    }
+
     // ============================================================
     //  友達状態をチェックして分岐
-    //  ・既に友達 → そのままフォームへ
-    //  ・未フォロー → 友達追加パネルを表示
-    //  ・getFriendship が使えない（Bot link feature 未設定）
-    //    → エラーを無視してフォームへ（フォールバック）
     // ============================================================
     function checkFriendshipAndLoad(userId) {
       _userId = userId; // ★ Fix: ここで必ずセットしておく（pollFriendship で使うため）
       liff.getFriendship()
         .then(function(result) {
           if (result.friendFlag) {
-            // 既に友達 → 直接フォームへ
             loadGAS(userId);
           } else {
-            // 未フォロー → 友達追加パネルを表示
             showFriendScreen();
           }
         })
@@ -316,6 +323,17 @@
           loadGAS(userId);
         });
     }
+
+    // ============================================================
+    //  登録完了後のゼミ選択ページへの遷移
+    // ============================================================
+    window.addEventListener('message', function(e) {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.action === 'navigateToSeminar' && _userId) {
+        var url = GAS_URL + '?page=seminar&uid=' + encodeURIComponent(_userId);
+        document.getElementById('gas-frame').src = url;
+      }
+    });
 
     // ============================================================
     //  LIFF 初期化 & userId 取得
