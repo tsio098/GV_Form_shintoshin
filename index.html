@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>グレイトヴォヤージュ</title>
+  <title>グレイトヴォヤージュ 入塾/ゼミ選択</title>
 
   <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -231,7 +231,7 @@
     var LIFF_ID = '2009771008-1FTbZYBs';
 
     // ★★ GASの最新デプロイURLに書き換えてください ★★
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-aOvu6ROt/exec';
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9IwWWsLqgJ60qo9PRiVxuJA81gCzcKf4h5JbY-4iFqxXDt2VfAjVfJLH-a0vu6R0t/exec';
 
     var _userId = '';
 
@@ -355,6 +355,52 @@
       showError('認証がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
     }, 15000);
 
+    // ============================================================
+    //  userId をなるべく確実に取得するヘルパー
+    //  ・openid スコープのみで動作（profile 不要）
+    //  ・通常は getContext() / getDecodedIDToken() で即取得
+    //  ・失敗時のみ 500ms 待って再試行 → それでもダメなら再ログイン
+    // ============================================================
+    function tryGetUserIdSync() {
+      // getContext()（LINEアプリ内起動なら即取れる）
+      try {
+        var ctx = liff.getContext();
+        if (ctx && ctx.userId) return ctx.userId;
+      } catch (e) {}
+      // getDecodedIDToken()（openid スコープがあれば動作）
+      try {
+        var tok = liff.getDecodedIDToken();
+        if (tok && tok.sub) return tok.sub;
+      } catch (e) {}
+      return null;
+    }
+
+    function resolveUserIdAndContinue() {
+      // 1st try
+      var uid = tryGetUserIdSync();
+      if (uid) {
+        clearTimeout(_globalTimeout);
+        checkFriendshipAndLoad(uid);
+        return;
+      }
+      // 2nd try（500ms 後）— SDK 準備のラグを吸収
+      setTimeout(function() {
+        var uid2 = tryGetUserIdSync();
+        if (uid2) {
+          clearTimeout(_globalTimeout);
+          checkFriendshipAndLoad(uid2);
+          return;
+        }
+        // 3rd: 再ログインで強制リフレッシュ（戻ってきたら ID Token が必ず取れる）
+        clearTimeout(_globalTimeout);
+        try {
+          liff.login({ redirectUri: location.href });
+        } catch (e) {
+          showError('ユーザーIDを取得できませんでした。<br/>LINEアプリから開き直してください。');
+        }
+      }, 500);
+    }
+
     liff.init({ liffId: LIFF_ID })
       .then(function() {
         if (!liff.isLoggedIn()) {
@@ -362,58 +408,8 @@
           liff.login();
           return;
         }
-
         setStatus('ユーザー情報を取得中...');
-
-        // 方法1: getContext()
-        try {
-          var ctx = liff.getContext();
-          if (ctx && ctx.userId) {
-            clearTimeout(_globalTimeout);
-            checkFriendshipAndLoad(ctx.userId);
-            return;
-          }
-        } catch(e) {}
-
-        // 方法2: getDecodedIDToken()
-        try {
-          var tok = liff.getDecodedIDToken();
-          if (tok && tok.sub) {
-            clearTimeout(_globalTimeout);
-            checkFriendshipAndLoad(tok.sub);
-            return;
-          }
-        } catch(e) {}
-
-        // 方法3: getProfile()（8秒タイムアウト）
-        var profileDone = false;
-        var profileTimer = setTimeout(function() {
-          if (!profileDone) {
-            profileDone = true;
-            clearTimeout(_globalTimeout);
-            showError('ユーザー情報の取得がタイムアウトしました。<br/>LINEアプリを再起動してお試しください。');
-          }
-        }, 8000);
-
-        liff.getProfile()
-          .then(function(p) {
-            if (profileDone) return;
-            profileDone = true;
-            clearTimeout(profileTimer);
-            clearTimeout(_globalTimeout);
-            if (p && p.userId) {
-              checkFriendshipAndLoad(p.userId);
-            } else {
-              showError('プロフィール情報にユーザーIDが含まれていません。');
-            }
-          })
-          .catch(function(e) {
-            if (profileDone) return;
-            profileDone = true;
-            clearTimeout(profileTimer);
-            clearTimeout(_globalTimeout);
-            showError('プロフィール取得エラー: ' + e.message);
-          });
+        resolveUserIdAndContinue();
       })
       .catch(function(err) {
         clearTimeout(_globalTimeout);
